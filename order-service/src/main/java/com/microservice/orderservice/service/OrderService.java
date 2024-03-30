@@ -1,5 +1,6 @@
 package com.microservice.orderservice.service;
 
+import com.microservice.orderservice.dto.InventoryResponse;
 import com.microservice.orderservice.dto.OrderLineItemDto;
 import com.microservice.orderservice.dto.OrderRequest;
 import com.microservice.orderservice.dto.OrderResponse;
@@ -11,10 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -22,7 +20,7 @@ import java.util.Optional;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
 
     public void createOrder(OrderRequest orderRequest) {
@@ -34,10 +32,19 @@ public class OrderService {
 
         order.setOrderLineItems(orderLineItems);
 
-        String uri = "";
-        boolean inStock = webClient.get().uri("").retrieve().bodyToMono(Boolean.class).block();
+        List<String> skuCodes = orderLineItems.stream().map(OrderLineItem::getSkuCode).toList();
+
+        String uri = "http://localhost:8082/inventory";
+
+        InventoryResponse[] inStock = webClientBuilder.build().get()
+                .uri(uri,
+                        uriBuilder -> uriBuilder.queryParam("skuCodes", skuCodes).build())
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class).block();
+
+        boolean allInStock =  Arrays.stream(inStock).anyMatch(InventoryResponse::isInStock);
         //check for inventory
-        if(inStock) {
+        if(allInStock) {
             orderRepository.save(order);
         } else {
             throw new IllegalArgumentException("Product out of stock");
