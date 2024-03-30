@@ -6,8 +6,10 @@ import com.microservice.orderservice.dto.OrderResponse;
 import com.microservice.orderservice.repository.Order;
 import com.microservice.orderservice.repository.OrderLineItem;
 import com.microservice.orderservice.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -16,13 +18,12 @@ import java.util.Optional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final WebClient webClient;
 
-    public OrderService(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
-    }
 
     public void createOrder(OrderRequest orderRequest) {
 
@@ -32,7 +33,15 @@ public class OrderService {
                 .map(this::mapToDto).toList();
 
         order.setOrderLineItems(orderLineItems);
-        orderRepository.save(order);
+
+        String uri = "";
+        boolean inStock = webClient.get().uri("").retrieve().bodyToMono(Boolean.class).block();
+        //check for inventory
+        if(inStock) {
+            orderRepository.save(order);
+        } else {
+            throw new IllegalArgumentException("Product out of stock");
+        }
 
     }
 
@@ -86,3 +95,4 @@ public class OrderService {
 
     }
 }
+
