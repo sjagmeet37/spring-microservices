@@ -34,7 +34,7 @@ public class OrderService {
 
         List<String> skuCodes = orderLineItems.stream().map(OrderLineItem::getSkuCode).toList();
 
-        String uri = "http://localhost:8082/inventory";
+        String uri = "http://inventory-service/inventory";
 
         InventoryResponse[] inStock = webClientBuilder.build().get()
                 .uri(uri,
