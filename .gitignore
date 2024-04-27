@@ -4,3 +4,4 @@
 /.idea
 /api-gateway/target
 /discover-server/target
+/notification-service/target

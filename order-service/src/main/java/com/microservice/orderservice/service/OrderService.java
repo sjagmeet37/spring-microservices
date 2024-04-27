@@ -4,10 +4,12 @@ import com.microservice.orderservice.dto.InventoryResponse;
 import com.microservice.orderservice.dto.OrderLineItemDto;
 import com.microservice.orderservice.dto.OrderRequest;
 import com.microservice.orderservice.dto.OrderResponse;
+import com.microservice.orderservice.event.OrderPlacedEvent;
 import com.microservice.orderservice.repository.Order;
 import com.microservice.orderservice.repository.OrderLineItem;
 import com.microservice.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,7 +23,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
-
+    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     public String createOrder(OrderRequest orderRequest) {
 
@@ -49,6 +51,8 @@ public class OrderService {
         } else {
             throw new IllegalArgumentException("Product out of stock");
         }
+
+        kafkaTemplate.send("notificationTOpic", new OrderPlacedEvent(order.getOrderId()));
         return "order create successfully";
     }
 
