@@ -2,3 +2,5 @@
 /product-service/target
 /order-service/target
 /.idea
+/api-gateway/target
+/discover-server/target

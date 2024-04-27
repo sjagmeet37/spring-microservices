@@ -23,7 +23,7 @@ public class OrderService {
     private final WebClient.Builder webClientBuilder;
 
 
-    public void createOrder(OrderRequest orderRequest) {
+    public String createOrder(OrderRequest orderRequest) {
 
         Order order = new Order();
 
@@ -49,7 +49,7 @@ public class OrderService {
         } else {
             throw new IllegalArgumentException("Product out of stock");
         }
-
+        return "order create successfully";
     }
 
     private OrderLineItem mapToDto(OrderLineItemDto orderLineItemDto) {
